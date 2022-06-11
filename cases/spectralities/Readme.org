@@ -10,7 +10,7 @@ oscillators, Physica D: Nonlinear Phenomena, Volume 437, 133334, 2022, ISSN
 
 (https://www.sciencedirect.com/science/article/pii/S0167278922001075)
 
-* Supporting files for paper 
+* Supporting files
 
 =m8-degradation.jl= --- the code used for preparing the figure showing
 the variation of instabilities in connected Erdos-Renyi graphs.
