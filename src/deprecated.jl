@@ -1,7 +1,17 @@
 # Script deprecated.jl
 
 # Collection of deprecated methods in a random order
-# Can be moved to obsoletes.jl at any instance, do not use!
+# Can be moved to obsoletes.jl unpredictably, do not use!
+
+function get_initial(Nvert::Int, (vmin, vmax))
+    # Generate random vector with Nvert components uniformly
+    #  distributed in the (vmin, vmax) interval
+    # NOTE: OBSOLETE, replaced by get_random_sphere or get_random_cube
+    bot, top = minmax(vmin, vmax)
+    mag = top - bot
+
+    return mag .* rand(Float64, Nvert) .+ bot
+end
 
 function get_initial_2(Nvert::Int, (vmin, vmax), p=0.5)
     # Generate random configuration of length `Nvert` in the separated

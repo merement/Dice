@@ -349,7 +349,7 @@ function cut_weighted(graph::SimpleWeightedGraph,
     out::Float64 = 0.0
     for edge in edges(graph)
         if conf[edge.src] * conf[edge.dst] == -1
-            out += weight(edge)
+            out += get_weight(graph, edge.src, edge.dst)
         end
     end
     return out
@@ -384,7 +384,104 @@ function cut(model::Model, state::Hybrid)
     return cut(model.graph, state[1])
 end
 
+## (TEMP: relaxed cut methods for the V-2 model)
 
+function relaxed_cut_correction_binary_v2(graph::SimpleGraph,
+                                          state::Hybrid) ::Float64
+    conf = state[1]
+    if nv(graph) != length(conf)
+        println("ERROR: The configuration size $(length(conf)) and the graph size $(nv(graph)) do not match")
+        return -1.0
+    end # side note: turned out to be useful
+
+    corr ::Float64 = 0.0
+    for edge in edges(graph)
+        corr += conf[edge.src] * conf[edge.dst] *
+            abs(state[2][edge.src] - state[2][edge.dst])
+    end
+    return corr/2
+end
+
+function relaxed_cut_correction_weighted_v2(graph::SimpleWeightedGraph,
+                                          state::Hybrid) ::Float64
+    conf = state[1]
+    if nv(graph) != length(conf)
+        println("ERROR: The configuration size $(length(conf)) and the graph size $(nv(graph)) do not match")
+        return -1.0
+    end # side note: turned out to be useful
+
+    corr ::Float64 = 0.0
+    for edge in edges(graph)
+        u, v = edge.src, edge.dst
+        corr += conf[u] * conf[v] *
+            get_weight(graph, u, v) * abs(state[2][u] - state[2][v])
+    end
+    return corr/2
+end
+
+function relaxed_cut_correction_v2(graph::ModelGraph, state::Hybrid) ::Float64
+    if graph isa SimpleWeightedGraph
+        return relaxed_cut_correction_weighted_v2(graph, state)
+    else
+        return relaxed_cut_correction_binary_v2(graph, state)
+    end
+end
+
+function relaxed_cut_binary_v2(graph::SimpleGraph, state::Hybrid) ::Float64
+    conf = state[1]
+    if nv(graph) != length(conf)
+        println("ERROR: The configuration size $(length(conf)) and the graph size $(nv(graph)) do not match")
+        return -1.0
+    end # side note: turned out to be useful
+
+    cv = cut_binary(graph, state[1])
+    corr = relaxed_cut_correction_binary_v2(graph, state)
+    return cv + corr
+end
+
+function relaxed_cut_weighted_v2(graph::SimpleWeightedGraph,
+                                 state::Hybrid) ::Float64
+    conf = state[1]
+    if nv(graph) != length(conf)
+        println("ERROR: The configuration size $(length(conf)) and the graph size $(nv(graph)) do not match")
+        return -1.0
+    end # side note: turned out to be useful
+
+    cv = cut_weighted(graph, state[1])
+    corr = relaxed_cut_correction_weighted_v2(graph, state)
+    return cv + corr
+end
+
+"""
+    relaxed_cut_v2(graph::ModelGraph, state::Hybrid)
+
+Evaluate the relaxed cut for 'graph' driven by the V-2 model in 'state'.
+This is a dispatch making a decision based whether the passed graph is
+binary or weighted
+
+# Arguments
+    graph - Graphs object (`ModelGraph`)
+    conf - binary configuration array {-1,1}^N
+
+# Output
+    ∑_e w(e)(1 - e.1 e.2)/2 + 1/2 ∑_e w(e) e.1 e.2 |X.1 - X.2|
+"""
+function relaxed_cut_v2(graph::ModelGraph, state::Hybrid) ::Float64
+    if graph isa SimpleWeightedGraph
+        return relaxed_cut_weighted_v2(graph, state)
+    else
+        return relaxed_cut_binary_v2(graph, state)
+    end
+end
+
+"""
+    relaxed_cut_v2(model::Model, state::Hybrid)
+
+Evaluate the relaxed cut for 'model' driven by the V-2 model in 'state'.
+"""
+function relaxed_cut_v2(model::Model, state::Hybrid) ::Float64
+    return relaxed_cut_v2(model.graph, state)
+end
 
 
 ############################################
@@ -436,16 +533,6 @@ function get_random_configuration(len::Int, p=0.5) ::SpinConf
 end
 
 # get_random_interval
-function get_initial(Nvert::Int, (vmin, vmax))
-    # Generate random vector with Nvert components uniformly
-    #  distributed in the (vmin, vmax) interval
-    # NOTE: OBSOLETE, replaced by get_random_sphere or get_random_cube
-    bot, top = minmax(vmin, vmax)
-    mag = top - bot
-
-    return mag .* rand(Float64, Nvert) .+ bot
-end
-
 
 """
     get_random_hybrid(Nvert::Int, (vmin, vmax)::Tuple{Float64, Float64}, p=0.5) ::Hybrid
@@ -1015,7 +1102,7 @@ function propagate(graph::ModelGraph, tmax::Int, scale::Float64,
     return V
 end
 
-function propagate(model::Model, tmax::Int, Vini)
+function propagate(model::Model, tmax::Int, Vini::FVector)
     # Advances the model::Model duration - 1 steps forward
     # Returns only the final state vector
     #
@@ -1031,7 +1118,7 @@ end
 
 function propagate(graph::ModelGraph, tmax::Int, scale::Float64,
     mtd::Function, start::Hybrid)::Hybrid
-    # Advances the model in the initial state (Sstart, Xstart)
+    # Advance the model in the initial hybrid state (Sstart, Xstart)
     # for tmax time steps
     S = start[1]
     X = start[2]
@@ -1043,8 +1130,8 @@ function propagate(graph::ModelGraph, tmax::Int, scale::Float64,
 end
 
 function propagate(model::Model, tmax::Int, start::Hybrid)::Hybrid
-    # Advances the model in the initial state (Sstart, Xstart)
-    # for tmax time steps
+    # Advance `model` in the hybrid initial state `start = (Sstart, Xstart)`
+    # for `tmax` time steps
     return propagate(model.graph, tmax, model.scale,
         model.coupling, start)
 end
@@ -1100,7 +1187,8 @@ Advance the network set on `graph` governed by the dynamical kernel `mtd`
 in the initial state `start` for `tmax` steps each of duration `scale` with
 spins listed in `pinned` fixed.
 
-NOTE: This version preserves the initial value of pinned relaxed spins.
+NOTE: This version preserves the values of pinned relaxed spins (both the
+binary and continuous components) as supplied in `state`.
 """
 function propagate_pinned(graph::ModelGraph, tmax::Int, scale::Float64,
                           mtd::Function, start::Hybrid,
@@ -1114,12 +1202,6 @@ function propagate_pinned(graph::ModelGraph, tmax::Int, scale::Float64,
     for _ = 1:(tmax-1)
         DX = step_rate_hybrid_pinned(graph, mtd, S, X, pinned) .* scale
         update_hybrid!(S, X, DX)
-        # This code is kept here to remind that the pinned version of
-        # step_rate explicitly avoids updating pinned nodes
-        # for pin in pinned
-        #     S[pin[1]] = pin[2]
-        #     X[pin[1]] = 0.0
-        # end
     end
     # # TEMP: verify the pinned nodes
     # for (ind, pin) in enumerate(pinned)
