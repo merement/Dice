@@ -83,3 +83,7 @@ Look in [[https://github.com/Quaid01/Dice_Student_Ali/blob/7820007354278e509b01c
 [[file:cases/][cases]] holds particular "releases" (see the description inside) and applications
 
 The main page is [[https://github.com/merement/Dice.git]]
+
+* Related projects
+
+- [[https://github.com/merement/Dice-GUI][Dice-GUI ]]A PyQt6-based GUI app to visualize dynamics of relaxed spin networks
