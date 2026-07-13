@@ -18,14 +18,7 @@ The source files of ~Dice~
 
 =Dice.jl= - the main file
 
-=hf.jl= - a temporary hack for scanning Hamming vicinities
-
 =dynamical_kernels.jl= - the library of dynamical models
-
-=dyn_anisotropy_model.jl= - Methods for treating anisotropy (local
-landscape) dynamically
-
-=advancement_methods.jl= -
 
 =file_operations.jl= -
 
@@ -34,8 +27,6 @@ landscape) dynamically
 =simulations.jl= -
 
 =statistical_methods.jl= -
-
-=vars.jl= -
 
 # Notes
 

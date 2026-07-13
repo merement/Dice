@@ -5,6 +5,69 @@
 ## TODO: 1. Direction and magnitude
 ##       2. Global and local
 
+# Legacy/experimental definitions moved from Dice.jl
+const graph_types = Set([:binary, :weighted])
+const isotropy_types = Set([:isotropic, :anisotropic, :dynamic])
+const noise_types = Set([:noiseless, :thermal, :dynamic])
+
+struct ModelKind
+    graph_type::Symbol
+    anisotropy::Symbol
+    Noise::Symbol
+
+    function ModelKind()
+        new(:binary, :isotropic, :noiseless)
+    end
+
+    function ModelKind(graph_t::Symbol)
+        graph_t in graph_types ||
+            throw(ArgumentError("Invalid graph type: $graph_t"))
+        new(graph_t, :isotropic, :noiseless)
+    end
+end
+
+mutable struct Model
+    kind     ::ModelKind
+    graph    ::ModelGraph
+    coupling ::Function
+    scale    ::Float64
+    silence  ::Int
+
+    Model() = new(ModelKind())
+    Model(x::ModelKind) = new(x)
+end
+
+Model(graph::ModelGraph, coupling::Function) =
+    begin
+        M = graph isa SimpleWeightedGraph ?
+            Model(ModelKind(:weighted)) :
+            Model(ModelKind(:binary))
+
+        M = Model()
+        M.graph = graph
+        M.scale = 1 / Graphs.Δ(graph)
+        M.coupling = coupling
+
+        M.silence = silence_default
+        return M
+    end
+
+Model(graph::ModelGraph, coupling::Function, scale::Float64) =
+    begin
+        M = Model(graph, coupling)
+        M.scale = scale
+
+        return M
+    end
+
+Model(graph::ModelGraph, coupling::Function, scale::Float64, Ks::Float64) =
+    begin
+        M = Model(graph, coupling, scale)
+        @error "Setting up anisotropy is an error in the present version"
+
+        return M
+    end
+
 function step_rate_extended(graph::SimpleGraph, coupling::Function,
                             V::Array,
                             Ks::Float64, anisotropy::Function, R::Float64)

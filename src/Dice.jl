@@ -71,30 +71,7 @@ const Hybrid = Tuple{SpinConf,FVector}
 # To specify the general kind of model (performance concerns?)
 const ModelGraph = Union{SimpleGraph,SimpleWeightedGraph}
 
-const graph_types = Set([:binary, :weighted])
-const isotropy_types = Set([:isotropic, :anisotropic, :dynamic])
-const noise_types = Set([:noiseless, :thermal, :dynamic])
-struct ModelKind
-    graph_type::Symbol
-    anisotropy::Symbol
-
-    Noise::Symbol
-
-    function ModelKind()
-        new(:binary, :isotropic, :noiseless)
-    end
-
-    function ModelKind(graph_t::Symbol)
-        graph_t in graph_types ||
-            throw(ArgumentError("Invalid graph type: $graph_t"))
-        new(graph_t, :isotropic, :noiseless)
-    end
-end
-
-"The data type defining the model (the structure of governing equations)"
 mutable struct Model
-    kind     ::ModelKind
-
     graph    ::ModelGraph
 
     "Dynamical coupling function"
@@ -105,21 +82,12 @@ mutable struct Model
     "the inverse level of verbosity"
     silence::Int           # default = silence_default
 
-    Model() = new(ModelKind())
-    Model(x::ModelKind) = new(x)
+    Model() = new()
 end
-# "The magnitude of the noise term"
-# Ns::Float64
-# "The implementation of the noise function"
-# noise::Function       # default = noiseUniform
 
 # Explicit constructors
 Model(graph::ModelGraph, coupling::Function) =
     begin
-        M = graph isa SimpleWeightedGraph ?
-            Model(ModelKind(:weighted)) :
-            Model(ModelKind(:binary))
-
         M = Model()
         M.graph = graph
         M.scale = 1 / Graphs.Δ(graph)
@@ -137,13 +105,6 @@ Model(graph::ModelGraph, coupling::Function, scale::Float64) =
         return M
     end
 
-Model(graph::ModelGraph, coupling::Function, scale::Float64, Ks::Float64) =
-    begin
-        M = Model(graph, coupling, scale)
-        @error "Setting up anisotropy is an error in the present version"
-
-        return M
-    end
 
 ### Internal service functions
 # TODO: replace by a proper logging functionality
@@ -608,10 +569,6 @@ function randnode(nvert)
     return rand(tuple(1:nvert...))
 end
 
-# Generator of transformations producing all strings with the fixed
-# Hamming distance from the given one
-#
-include("hf.jl")
 
 ############################################
 #
@@ -1321,9 +1278,6 @@ end
 #                                model.coupling, start, pinned)
 # end
 
-###   Extended methods treating anisotropy dynamically
-
-include("dyn_anisotropy_model.jl")
 
 ### Functions for the separated (relaxed spin) representation
 

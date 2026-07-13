@@ -1,0 +1,9 @@
+#+TITLE: Research and Experimental Solvers
+#+DESCRIPTION: Repository for experimental, legacy, and under-development components of Dice.
+
+This folder contains code that is not part of the active, production-grade `Dice` Julia solver library. These components are kept for historical reference, backward compatibility with older experimental scripts, and potential future development.
+
+* Contents
+
+- =hf.jl= - Hamming-flip sequence generation functions (~hamseq1~ to ~hamseq5~). Originally used as a temporary hack for scanning Hamming vicinities.
+- =dyn_anisotropy_model.jl= - Experimental methods for treating anisotropy dynamically. Contains the legacy ~ModelKind~ definitions, custom anisotropy constructors, and extended trajectories/step methods.
