@@ -159,3 +159,76 @@ NOTE: Obsolete, see `hybrid_to_cont`
 function combine(s::Array{Int8}, x::Array{Float64}, r=0.0)
     return x .+ s .+ r
 end
+
+# Backward compatibility wrappers for renamed functions
+export
+    saveMTXGraph,
+    loadMTXGraph,
+    loadMTXAdjacency,
+    HammingD,
+    EuclidD,
+    noiseUniform,
+    noiseNormal
+
+function saveMTXGraph(G::ModelGraph, filename::AbstractString)
+    @warn "Function `saveMTXGraph` is deprecated, use `save_mtx_graph` instead"
+    save_mtx_graph(G, filename)
+end
+
+function loadMTXGraph(filename::AbstractString, min_weight::Float64=weight_eps)::ModelGraph
+    @warn "Function `loadMTXGraph` is deprecated, use `load_mtx_graph` instead"
+    load_mtx_graph(filename, min_weight)
+end
+
+function loadMTXAdjacency(filename::AbstractString, min_weight::Float64=weight_eps)::Matrix
+    @warn "Function `loadMTXAdjacency` is deprecated, use `load_mtx_adjacency` instead"
+    load_mtx_adjacency(filename, min_weight)
+end
+
+function HammingD(s1::AbstractVector, s2::AbstractVector)::Int
+    @warn "Function `HammingD` is deprecated, use `hamming_distance` instead"
+    hamming_distance(s1, s2)
+end
+
+function EuclidD(V1::AbstractVector{<:Real}, V2::AbstractVector{<:Real})::Float64
+    @warn "Function `EuclidD` is deprecated, use `euclid_distance` instead"
+    euclid_distance(V1, V2)
+end
+
+function noiseUniform(L::Int)::Array{Float64, 1}
+    @warn "Function `noiseUniform` is deprecated, use `noise_uniform` instead"
+    noise_uniform(L)
+end
+
+# Candidates to deprecate (Moved from src/Dice.jl)
+export
+    get_random_cut,
+    get_rate,
+    cut_2
+
+function get_random_cut(graph, V, trials=10)
+    @warn "Function `get_random_cut` is deprecated and will be removed in a future version"
+    (becu, _, _) = get_random_rounding(graph, V, trials)
+    return becu
+end
+
+function get_rate(VFull)
+    @warn "Function `get_rate` is deprecated and will be removed in a future version"
+    out = [sum((VFull[:, i+1] - VFull[:, i]) .^ 2) for i in 1:(size(VFull)[2]-1)]
+    return sqrt.([out; out[end]])
+end
+
+function cut_2(model, s::SpinConf, x::FVector)
+    @warn "Function `cut_2` is deprecated and will be removed in a future version"
+    phix = 0
+    graph = model.graph
+    for edge in edges(graph)
+        phix += s[edge.src] * s[edge.dst] * abs(x[edge.src] - x[edge.dst]) / 2
+    end
+    return Dice.cut(graph, s) + phix
+end
+
+function cut_2(model, distr::Hybrid)
+    return cut_2(model, distr[1], distr[2])
+end
+

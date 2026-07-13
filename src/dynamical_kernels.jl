@@ -9,8 +9,8 @@ function none_method(v1, v2)
     return 0 * v1 * v2 # for the type stability thing
 end
 
-const Pi2 = pi / 2
-const Pi4 = pi / 4
+const PI2 = pi / 2
+const PI4 = pi / 4
 
 ################################################
 ###
@@ -18,13 +18,13 @@ const Pi4 = pi / 4
 ###
 ################################################
 
-function rank_2_SDP_dynamic_2(v::Float64)::Float64
+function rank2_sdp_dynamic(v::Float64)::Float64
     # the coupling function of rank-2 SDP in the hybrid representation
     # 
     return PI2 * sin(PI2*v)
 end
 
-function rank_2_SDP_static_2(v::Float64)::Float64
+function rank2_sdp_static(v::Float64)::Float64
     # the coupling function of rank-2 SDP in the hybrid representation
     # 
     return sin(PI4*v)^2
@@ -126,13 +126,13 @@ end
 ###
 #############################################
 
-function noiseUniform(L::Int)::Array{Float64, 1}
+function noise_uniform(L::Int)::Array{Float64, 1}
     # uniform distribution in interval [-1, 1]
     # returns vector of length L
     return rand(Uniform(-1, 1), L)
 end
 
-function noiseNormal(L::Int)::Array{Float64, 1}
+function noise_normal(L::Int)::Array{Float64, 1}
     # normal distribution with zero mean and unit variance
     # returns vector of length L
     return rand(Normal(0, 1), L)
@@ -151,11 +151,11 @@ end
 The coupling energy inducing the XY-model (rank-2 SDP relaxation).
 """
 function cosine(v)
-    return cos.(Pi2 .* v)
+    return cos.(PI2 .* v)
 end
 
 function sine(v)
-    return sin.(Pi2 .* v)
+    return sin.(PI2 .* v)
 end
 
 function sine(v1, v2)
@@ -258,7 +258,7 @@ function bilinear(v1, v2)
 end
 
 function bisine(v1, v2)
-    return -Pi2 .* cos(Pi2 .* v1) .* triangular(Pi2 .* v2)
+    return -PI2 .* cos(PI2 .* v1) .* triangular(PI2 .* v2)
 end
 
 function squarishk(v, k=10)

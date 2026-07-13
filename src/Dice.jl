@@ -15,10 +15,10 @@ export
     Hybrid,
     SpinConf,
     Model,
-    # File operrations
-    saveMTXGraph,
-    loadMTXAdjacency,
-    loadMTXGraph,
+    # File operations
+    save_mtx_graph,
+    load_mtx_adjacency,
+    load_mtx_graph,
     # Generating graphs
     get_ER_graph,
     get_regular_graph,
@@ -27,6 +27,9 @@ export
     get_random_sphere,
     get_random_configuration,
     get_random_hybrid,
+    # Distance metrics
+    hamming_distance,
+    euclid_distance,
     # Cut and rounding
     cut,
     get_best_cut,
@@ -232,21 +235,27 @@ function cont_to_hybrid(Vinp::Vector{Float64}, r::Float64=0.0)::Hybrid
 end
 
 """
-    HammingD(s1::Vector, s2::Vector)
+    hamming_distance(s1::AbstractVector, s2::AbstractVector)::Int
 
 Evaluate the Hamming distance between vectors `s1` and `s2` of the same
 length. The distance is defined as the number of component-wise differences
 in `s1` and `s2`.
 """
-function HammingD(s1::Array, s2::Array)
-    length(s1) == length(s2) &&
-        error("Cannot evaluate Hamming distance - vectors lengths don't match ($(length(s1)), $(length(s2)))")
-
-    return sum(sign.(abs.(s1 - s2)))
+function hamming_distance(s1::AbstractVector, s2::AbstractVector)::Int
+    if length(s1) != length(s2)
+        throw(DimensionMismatch("Vectors lengths don't match ($(length(s1)), $(length(s2)))"))
+    end
+    count = 0
+    @inbounds for i in eachindex(s1, s2)
+        if s1[i] != s2[i]
+            count += 1
+        end
+    end
+    return count
 end
 
 """
-    EuclidD(V1::FVector, V2::FVector)
+    euclid_distance(V1::AbstractVector{<:Real}, V2::AbstractVector{<:Real})::Float64
 
 Evaluate the Euclidean distance between two distributions
 
@@ -256,8 +265,11 @@ Evaluate the Euclidean distance between two distributions
 OUTPUT:
       Sum_v (V_1(v) - V_2(v))^2
 """
-function EuclidD(V1::FVector, V2::FVector)
-    return sum((V1 .- V2) .^ 2)
+function euclid_distance(V1::AbstractVector{<:Real}, V2::AbstractVector{<:Real})::Float64
+    if length(V1) != length(V2)
+        throw(DimensionMismatch("Vectors lengths don't match ($(length(V1)), $(length(V2)))"))
+    end
+    return sum((V1[i] - V2[i])^2 for i in eachindex(V1, V2))
 end
 
 
@@ -1311,43 +1323,5 @@ include("dynamical_kernels.jl")
 ### Assorted deprecated methods
 
 include("deprecated.jl")
-
-### Candidates to deprecate
-
-function get_random_cut(graph, V, trials=10)
-    (becu, _, _) = get_random_rounding(graph, V, trials)
-    return becu
-end
-
-function get_rate(VFull)
-    # Evaluates the magnitude of variations (discrete time derivative)
-    # in a 2D array VFull[time, N].
-    # Returns a 1D array of magnitudes with the last element duplicated
-    # to keep the same size as the number of time points in VFull
-
-    out = [sum((VFull[:, i+1] - VFull[:, i]) .^ 2) for i in 1:(size(VFull)[2]-1)]
-    return sqrt.([out; out[end]])
-end
-
-# Some Model II specific functions
-
-function cut_2(model, s::SpinConf, x::FVector)
-    # This should be some kind of energy function for Model II
-    # Evaluages the cut function for Model II:
-    # C_2(sigma, X) = C(sigma) + \Delta C_2(sigma, X)
-    # where C(\sigma) is the cut given by the binary component
-    # and \Delta C_2 = \sum_{m,n} A_{m,n} s_m s_n |x_m - x_n|/2
-    phix = 0
-    graph = model.graph
-    for edge in edges(graph)
-        phix += s[edge.src] * s[edge.dst] * abs(x[edge.src] - x[edge.dst]) / 2
-    end
-    return Dice.cut(graph, s) + phix
-end
-
-function cut_2(model, distr::Hybrid)
-    return cut_2(model, distr[1], distr[2])
-end
-
 
 end # end of module Dice

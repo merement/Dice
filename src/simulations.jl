@@ -144,7 +144,7 @@ function test_branch(model, Vstart, domain, tmax, Ni, max_depth)
         if cucut > bcut
             bcut = cucut
             message(model,
-                    "Step $stepcount arrived at $bcut with the displacement $(HammingD(cuconf, bconf))", 2)
+                    "Step $stepcount arrived at $bcut with the displacement $(hamming_distance(cuconf, bconf))", 2)
             bconf = cuconf
             Vcentral = cuconf
 

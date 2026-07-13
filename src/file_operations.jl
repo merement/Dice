@@ -3,21 +3,21 @@
 # File operations
 
 """
-    loadMTXAdjacency(filename::AbstractString,
+    load_mtx_adjacency(filename::AbstractString,
                     min_weight::Float64 = weight_eps)::Matrix
 
 Read the full adjacency matrix of the graph stored in file `filename`
 
-This function reads the graph using `loadMTXGraph` and returns
+This function reads the graph using `load_mtx_graph` and returns
 its adjacency matrix converted to a full matrix.
 """
-function loadMTXAdjacency(filename::AbstractString,
+function load_mtx_adjacency(filename::AbstractString,
     min_weight::Float64=weight_eps)::Matrix
-    return Matrix(adjacency_matrix(loadMTXGraph(filename, min_weight)))
+    return Matrix(adjacency_matrix(load_mtx_graph(filename, min_weight)))
 end
 
 """
-    loadMTXGraph(filename::AbstractString,
+    load_mtx_graph(filename::AbstractString,
                 min_weight::Float64 = weight_eps)::ModelGraph
 
 Read graph stored in file `filename` in the simplified Matrixmarket
@@ -44,7 +44,7 @@ The simplified format:
 1 3
 2 3
 """
-function loadMTXGraph(filename::AbstractString,
+function load_mtx_graph(filename::AbstractString,
     min_weight::Float64=weight_eps)::ModelGraph
     open(filename, "r") do mtxFile
         header = true
@@ -115,12 +115,12 @@ end
 NOTE: legacy alias for `loadMTXGraph`
 """
 function loadDumpedGraph(filename::AbstractString)::ModelGraph
-    @warn "Function `loadDumpedGraph` is obsolete use `loadMTXGraph` instead"
-    return loadMTXGraph(filename)
+    @warn "Function `loadDumpedGraph` is obsolete use `load_mtx_graph` instead"
+    return load_mtx_graph(filename)
 end
 
 """
-    saveMTXGraph(Graph::SimpleGraph, filename::String)
+    save_mtx_graph(Graph::SimpleGraph, filename::String)
 
 Writes the sparce adjacency matrix of `Graph` to file `filename` in the reduced
 `MatrixMarket` format.
@@ -130,7 +130,7 @@ The first line contains two numbers: `|V| |E|`
 Next lines contain three numbers: `u v A_{u, v}`
 where `u` and `v` are the nodes numbers and `A_{u, v}` is the edge weight.
 """
-function saveMTXGraph(G::ModelGraph, filename::AbstractString)
+function save_mtx_graph(G::ModelGraph, filename::AbstractString)
     open(filename, "w") do out
         println(out, "$(nv(G)) $(ne(G))")
         for edge in edges(G)
@@ -145,17 +145,17 @@ function saveMTXGraph(G::ModelGraph, filename::AbstractString)
 end
 
 function dumpGraph(G::ModelGraph, filename::AbstractString)
-    @warn "Function `dumpGraph` is obsolete use `saveMTXGraph` instead"
-    saveMTXGraph(G, filename)
+    @warn "Function `dumpGraph` is obsolete use `save_mtx_graph` instead"
+    save_mtx_graph(G, filename)
 end
 
 """
-    dumpGraphConcole(G::ModelGraph)
+    dump_graph_console(G::ModelGraph)
 
-Prints the sparce adjacency matrix of `Graph` to concole
-in the reduced `MatrixMarket` format (see `dumpGraph`).
+Prints the sparce adjacency matrix of `Graph` to console
+in the reduced `MatrixMarket` format (see `save_mtx_graph`).
 """
-function dumpGraphConcole(G::ModelGraph)
+function dump_graph_console(G::ModelGraph)
     println("$(nv(G)) $(ne(G))")
     for edge in edges(G)
         if G isa SimpleWeightedGraph
@@ -168,7 +168,7 @@ function dumpGraphConcole(G::ModelGraph)
     end
 end
 
-function dumpDistribution(P, filename)
+function dump_distribution(P, filename)
     # P is a tuple (x, Px) as, for instance, produced by the integer distribution
     open(filename, "w") do out
         for i in 1:length(P[1])
