@@ -859,19 +859,18 @@ Write metadata records to `io` as newline-delimited JSON.
 
 This function is the stream-native counterpart of file header writing. It
 emits machine-readable metadata records directly as JSON objects, without
-the file format's `#@` prefix and discarding ordinary comments. If a
-human-readable note should be transmitted through the stream, represent it
-as metadata instead.
+the file format's `#@` prefix. If a human-readable note should be
+transmitted through the stream, represent it as metadata instead.
 
-Otherwise, `header` may be either a collection of header entries or a
-single header entry. Supported entries are the same as for file headers:
+`header` may be either a collection of header entries or a single header
+entry. Supported entries are the same as for file headers:
 
 - `record(:type; key=value, ...)`
 - `metadata(obj)`
 - `NamedTuple`
 - `Dict`
 
-`RawHeaderLine` values are rejected.
+Ordinary comments are discarded. `RawHeaderLine` values are rejected.
 
 # Example
 
@@ -976,9 +975,9 @@ end
 
 Write one normalized stream metadata item to `io`.
 
-This is an internal helper used by [`stream_header`](@ref). Ordinary comments are
-discarded. Machine-readable metadata is serialized as one JSON object followed
-by a newline. Raw header lines are rejected.
+This is an internal helper used by [`stream_header`](@ref). Ordinary
+comments are discarded. Raw header lines are rejected. Machine-readable
+metadata is serialized as one JSON object followed by a newline.
 """
 function stream_header_item(io::IO, item)
     h = as_header_line(item)
@@ -1014,11 +1013,7 @@ The emitted object has the form
 {"type":"sample","time":0.0,"node_states":[[1,0.12],[-1,0.44]]}
 ```
 
-where `node_states[i]` is the pair
-
-```text
-[spin_i, X_i]
-```
+where `node_states[i] = [spin_i, X_i]`.
 
 The sample is validated before the record is constructed. Each spin must be
 `+1` or `-1`, and the spin and floating-point vectors must have equal length.
@@ -1083,11 +1078,7 @@ end
 
 Return one relaxed-spin sample as a newline-delimited JSON string.
 
-This is a string-producing convenience wrapper around
-
-```julia
-stream_sample(io, hybrid, time)
-```
+This is a string-producing convenience wrapper around `stream_sample`
 
 # Example
 
@@ -1108,8 +1099,8 @@ end
 Write metadata and relaxed-spin trajectory samples to `io` as newline-delimited
 JSON.
 
-First, all machine-readable metadata records from `header` are written
-using [`stream_header`](@ref). Ordinary comments are discarded. Each
+First, all JSON records from `header` are written using
+[`stream_header`](@ref). Ordinary comments are discarded. Each
 configuration in the trajectory is written as a `"sample"` message.
 
 Each sample message has the form
@@ -1154,16 +1145,6 @@ writes
 ```
 
 For live simulations, metadata can also be interjected manually between samples:
-
-```julia
-stream_header(io, header)
-
-stream_sample(io, hybrid1, 0.0)
-
-stream_header(io, record(:conditions; coupling = 0.25))
-
-stream_sample(io, hybrid2, 0.1)
-```
 """
 function stream_trajectories(
     io::IO,
@@ -1209,8 +1190,6 @@ end
 Write metadata and relaxed-spin trajectory samples to `io` as NDJSON, using
 default 0-based integer times: `0, 1, 2, ..., length(traj)-1`.
 
-This function does not flush `io`.
-
 # Example
 
 ```julia
@@ -1237,11 +1216,7 @@ end
 
 Return metadata and relaxed-spin trajectory samples as a NDJSON string.
 
-This is a string-producing convenience wrapper around
-
-```julia
-stream_trajectories(io, traj, time, header)
-```
+This is a string-producing convenience wrapper around `stream_trajectories`.
 
 # Example
 
