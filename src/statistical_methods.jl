@@ -1,147 +1,159 @@
 # Statistical methods
 
 """
-    integer_distribution(arr::Vector{Int})::Tuple{Vector{Int}, Vector{Float64}}
+    integer_distribution(arr::AbstractVector{Int})::Tuple{Vector{Int}, Vector{Float64}}
 
 Evaluate a discrete (over integers) distribution function inferred from
 the provided sample `arr`.
 
-For each integer in [mininum(arr), maximum(arr)], the function counts
+For each integer in [minimum(arr), maximum(arr)], the function counts
 the relative number of incidences.
 
 # INPUT:
-    `arr::Vector{Int})` - empirical sample of the distribution function
+    `arr::AbstractVector{Int}` - empirical sample of the distribution function
 
 # OUTPUT:
     `(x::Vector{Int}, p(x)::Vector{Float64})`, where
     `x` - values sampled in `arr`
-    `p(x)` - occurence probabilities
+    `p(x)` - occurrence probabilities
 """
-function integer_distribution(arr::Vector{Int}) ::Tuple{Vector{Int}, Vector{Float64}}
-
-    vals::Array{Int, 1} = []
-    pval::Array{Float64, 1} = []
-    arr = sort(arr)
-    numPoints = length(arr)
-    ind = 1
-    while ind <= numPoints
-        val = arr[ind]
-        elems = findall(y -> y == val, arr[ind:end])
-        push!(vals, val)
-        push!(pval, length(elems))
-        # search in a slice returns indices relative to the slice        
-        ind += elems[end]
+function integer_distribution(arr::AbstractVector{Int})::Tuple{Vector{Int}, Vector{Float64}}
+    sorted_arr = sort(arr)
+    n = length(sorted_arr)
+    if n == 0
+        return (Int[], Float64[])
     end
-    return (vals, pval./numPoints)
+
+    vals = Int[]
+    pvals = Float64[]
+    
+    sizehint!(vals, n)
+    sizehint!(pvals, n)
+
+    i = 1
+    while i <= n
+        val = sorted_arr[i]
+        count = 1
+        while i + count <= n && sorted_arr[i + count] == val
+            count += 1
+        end
+        push!(vals, val)
+        push!(pvals, count / n)
+        i += count
+    end
+
+    return (vals, pvals)
 end
 
 """
-    cumulative_integer_distribution(arr::Vector{Int}) ::Tuple{Vector{Int},
-                                                              Vector{Float64}} 
+    cumulative_integer_distribution(arr::AbstractVector{Int})::Tuple{Vector{Int}, Vector{Float64}}
 
 Evaluate a cumulative discrete distribution function over integers inferred
 from the samples provided in `arr`.
 
-For each integer `val` in [mininum(arr), maximum(arr)], the function counts
+For each integer `val` in [minimum(arr), maximum(arr)], the function counts
 the relative number of values in `arr` strictly smaller than `val`.
 
 # INPUT:
-    `arr::Vector{Int})` - empirical sample of the distribution function
+    `arr::AbstractVector{Int}` - empirical sample of the distribution function
 
 # OUTPUT:
     `(x::Vector{Int}, p(x)::Vector{Float64})`, where
     ``x`` - values sampled in `arr`
     ``p(x) = P(a < x)`` - probability to encounter value smaller than `x`
 """
-function cumulative_integer_distribution(arr::Vector{Int}) ::Tuple{Vector{Int},
-                                                                   Vector{Float64}}
-    arr = sort(arr)
-    numPoints = length(arr)
+function cumulative_integer_distribution(arr::AbstractVector{Int})::Tuple{Vector{Int}, Vector{Float64}}
+    sorted_arr = sort(arr)
+    n = length(sorted_arr)
+    if n == 0
+        return (Int[], Float64[])
+    end
+
+    vals = Int[sorted_arr[1] - 1]
+    pvals = Float64[0.0]
     
-    vals::Vector{Int} = [arr[1] - 1]
-    pval::Array{Float64} = [0.0]
-    ind = 1 # scanning index
-    while ind < numPoints
-        val = arr[ind]
-        over_pos = findfirst(y -> y > val, arr[(ind + 1):end])
-        if over_pos isa Nothing
+    sizehint!(vals, n + 2)
+    sizehint!(pvals, n + 2)
+
+    i = 1
+    while i < n
+        val = sorted_arr[i]
+        
+        j = i + 1
+        while j <= n && sorted_arr[j] == val
+            j += 1
+        end
+        
+        if j > n
             push!(vals, val + 1)
-            push!(pval, numPoints)
-            return (vals, pval./numPoints)
+            push!(pvals, Float64(n))
+            return (vals, pvals ./ n)
         end
         
         push!(vals, val)
-        push!(pval, pval[end] + over_pos)
-        ind += over_pos
-    end
-    # we get here if the last point is an outlier
-    push!(vals, arr[ind] + 1)
-    push!(pval, numPoints)
-    return (vals, pval./numPoints)
-end
-
-function av_dispersion(graph::SimpleGraph, V)
-    # Evaluates average difference between the dynamical variables
-    # at adjacent nodes
-    #
-    # INPUT:
-    #   graph
-    #   V - the array of dynamical variables
-    #
-    # OUTPUT:
-    #   Σ_e |V(a) - V(b)|/|graph|
-
-    return sum([abs(V[edge.src] - V[edge.dst]) for edge in edges(graph)]) / nv(graph)
-end
-
-function c_variance(V, intervals)
-    # OBSOLETE (see NOTE)
-    # Calculates first two momenta of the pieces of data that fall
-    # within given M intervals provided in `intervals`
-    #
-    # INPUT:
-    #   V - array of data
-    #   intervals - M x 2 array of intervals boundaries
-    #
-    # OUTPUT:
-    #   M x 3 array with the number of points, mean and variance of data
-    #   inside the respective intervals
-    #
-    # NOTE: cannot process a single interval and does not treat folding intervals
-
-    out = zeros(size(intervals)[1], 3)
-
-    for i in 1:(size(out)[1])
-        ari = filter(t -> intervals[i,1] < t < intervals[i,2], V)
-        ni = length(ari)
-        av = sum(ari) / ni
-        var = sum((ari .- av).^2) / ni
-
-        out[i, :] = [ni, av, sqrt(var)]
+        push!(pvals, pvals[end] + (j - i))
+        i = j
     end
 
-    return out
+    push!(vals, sorted_arr[i] + 1)
+    push!(pvals, Float64(n))
+    return (vals, pvals ./ n)
 end
 
 """
-    cluster_variance(V::Array, interval)
+    av_dispersion(graph::SimpleGraph, V::AbstractVector{<:Real})::Float64
+
+Evaluates average difference between the dynamical variables at adjacent nodes.
+
+# INPUT:
+    `graph::SimpleGraph`
+    `V::AbstractVector{<:Real}` - the array of dynamical variables
+
+# OUTPUT:
+    `Σ_e |V(a) - V(b)| / |graph|`
+"""
+function av_dispersion(graph::SimpleGraph, V::AbstractVector{<:Real})::Float64
+    return sum(abs(V[edge.src] - V[edge.dst]) for edge in edges(graph)) / nv(graph)
+end
+
+"""
+    cluster_variance(V::AbstractVector{<:Real}, interval)::Vector{Float64}
 
 Calculate first two momenta of the pieces of data that fall within
-the provided interval
+the provided interval.
     
-INPUT:
-      V - array of data
-      interval - (vmin, vmax)
+# INPUT:
+    `V::AbstractVector{<:Real}` - array of data
+    `interval` - (vmin, vmax)
     
-OUTPUT:
-      Array[3] = [number of points, mean, variance]
+# OUTPUT:
+    `Array[3] = [number of points, mean, variance]`
 """
-function cluster_variance(V::Array, interval)
- 
-    ari = filter(t -> interval[1] < t < interval[2], V)
-    ni = length(ari)
-    av = sum(ari) / ni
-    var = sum((ari .- av).^2) / ni
-
-    return [ni, av, sqrt(var)]
+function cluster_variance(V::AbstractVector{<:Real}, interval::Union{Tuple{<:Real, <:Real}, AbstractVector{<:Real}})::Vector{Float64}
+    vmin, vmax = interval[1], interval[2]
+    
+    count = 0
+    sum_val = 0.0
+    for t in V
+        if vmin < t < vmax
+            count += 1
+            sum_val += t
+        end
+    end
+    
+    if count == 0
+        return Float64[0.0, 0.0, 0.0]
+    end
+    
+    av = sum_val / count
+    
+    sum_sq_diff = 0.0
+    for t in V
+        if vmin < t < vmax
+            sum_sq_diff += (t - av)^2
+        end
+    end
+    
+    var = sum_sq_diff / count
+    return Float64[count, av, sqrt(var)]
 end
