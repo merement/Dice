@@ -70,8 +70,6 @@ const weight_eps = 1e-5
 # Data types for dynamical variables
 const FVector = Vector{Float64}
 const SpinConf = Vector{Int8}
-# It's not a vector of RelaxedSpin = Tuple{Spin, Interval}
-# because of the performance concerns
 const Hybrid = Tuple{SpinConf,FVector}
 
 # To specify the general kind of model (performance concerns?)
@@ -737,7 +735,6 @@ function local_search_pinned(graph::ModelGraph,
 end
 
 
-
 """
     local_search!(graph::ModelGraph, conf)
 
@@ -799,6 +796,7 @@ function local_twosearch(graph::SimpleGraph, conf::SpinConf) :SpinConf
     return conf
 end
 
+
 """
     local_twosearch!(graph::SimpleGraph, conf)
 
@@ -825,6 +823,7 @@ function local_twosearch!(graph::SimpleGraph, conf::SpinConf)
     end
     return count
 end
+
 
 """
     number_to_conf(number ::Int, len ::Int)::SpinConf
@@ -891,6 +890,7 @@ function get_regular_graph(Nvert, degree)::SimpleGraph
     end
 end
 
+
 ###   Dynamics methods
 
 function step_rate(graph::SimpleGraph, method::Function,
@@ -907,6 +907,7 @@ function step_rate(graph::SimpleGraph, method::Function,
     return out
 end
 
+
 function step_rate(graph::SimpleWeightedGraph, method::Function,
     V::FVector)::FVector
     # Evaluate Δξ (continuous representation) for a single step
@@ -920,6 +921,7 @@ function step_rate(graph::SimpleWeightedGraph, method::Function,
     end
     return out
 end
+
 
 """
     update_hybrid!(spins::SpinConf, xs::FVector, dx::FVector)
