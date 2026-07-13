@@ -30,6 +30,9 @@ export
     # Distance metrics
     hamming_distance,
     euclid_distance,
+    # Statistical methods
+    integer_distribution,
+    cumulative_integer_distribution,
     # Cut and rounding
     cut,
     get_best_cut,
