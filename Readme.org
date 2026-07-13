@@ -23,7 +23,7 @@ default Julia's environment:
 4. Open the package manager by typing ~]~, then type in ~dev .~ to add =Dice= to
    the list of available packages in =Julia=.
 
-To confirm that =Dice= is working correctly, run the [[file:tests/examples/simple.jl][simple.jl]] file. What you
+To confirm that =Dice= is working correctly, run the [[file:docs/examples/simple.jl][simple.jl]] file. What you
 should get a random initial spin state (assigned to ~state[1]~) as well as
 the max-cut spin state noted as:
 
@@ -74,7 +74,7 @@ Once you have the initial state, you can run the model to achieve the ground sta
 - Using ~propagate~, which will return the final ground state of the model. 
 - Using ~trajectories~, which will return the intermediary steps of the computation as well as the final ground state.
 
-Look in [[file:tests/examples/simple.jl][simple.jl]] for an example on how to do all of this. There are other example files located in [[file:tests/examples][examples]]. You may also look in the source code to find other functions that may suit your needs.
+Look in [[file:docs/examples/simple.jl][simple.jl]] for an example on how to do all of this. There are other example files located in [[file:docs/examples][examples]]. You may also look in the source code to find other functions that may suit your needs.
 
 * Content
 

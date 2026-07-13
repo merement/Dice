@@ -1,6 +1,6 @@
 name = "Dice"
 uuid = "b1032ea8-0e44-4f5e-a542-828f9d6795b4"
-version = "0.4.0"
+version = "0.4.1"
 authors = ["Misha Erementchouk <merement@gmail.com>"]
 
 [deps]
