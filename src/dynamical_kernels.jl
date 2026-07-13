@@ -29,9 +29,6 @@ function rank2_sdp_static(v::Float64)::Float64
     # 
     return sin(PI4*v)^2
 end
-for i in 1:3
-    println(i)
-end
 
 #############################################
 ###

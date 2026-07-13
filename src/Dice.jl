@@ -110,19 +110,24 @@ Model(graph::ModelGraph, coupling::Function, scale::Float64) =
 
 
 ### Internal service functions
-# TODO: replace by a proper logging functionality
 
 function message(model::Model, out, importance=1)
     if importance > model.silence
-        println("$out ($importance)")
+        if importance == 1
+            @debug out
+        elseif importance == 2
+            @info out
+        elseif importance == 3
+            @warn out
+        else
+            @error out
+        end
     end
 end
 
 const DEBUG = 1
 function debug_msg(out)
-    if DEBUG > 0
-        println("$out (DEBUG = $DEBUG)")
-    end
+    @debug out
 end
 
 
@@ -289,7 +294,7 @@ OUTPUT:
 """
 function cut_binary(graph::SimpleGraph, conf::SpinConf)::Int
     if nv(graph) != length(conf)
-        println("ERROR: The configuration size $(length(conf)) and the graph size $(nv(graph)) do not match")
+        throw(DimensionMismatch("The configuration size $(length(conf)) and the graph size $(nv(graph)) do not match"))
     end # NOTE: turned out to be useful
 
     out::Int = 0
@@ -316,7 +321,7 @@ OUTPUT:
 function cut_weighted(graph::SimpleWeightedGraph,
     conf::SpinConf)::Float64
     if nv(graph) != length(conf)
-        println("ERROR: The configuration size $(length(conf)) and the graph size $(nv(graph)) do not match")
+        throw(DimensionMismatch("The configuration size $(length(conf)) and the graph size $(nv(graph)) do not match"))
     end # side note: turned out to be useful
 
     out::Float64 = 0.0
@@ -363,8 +368,7 @@ function relaxed_cut_correction_binary_v2(graph::SimpleGraph,
                                           state::Hybrid) ::Float64
     conf = state[1]
     if nv(graph) != length(conf)
-        println("ERROR: The configuration size $(length(conf)) and the graph size $(nv(graph)) do not match")
-        return -1.0
+        throw(DimensionMismatch("The configuration size $(length(conf)) and the graph size $(nv(graph)) do not match"))
     end # side note: turned out to be useful
 
     corr ::Float64 = 0.0
@@ -379,8 +383,7 @@ function relaxed_cut_correction_weighted_v2(graph::SimpleWeightedGraph,
                                           state::Hybrid) ::Float64
     conf = state[1]
     if nv(graph) != length(conf)
-        println("ERROR: The configuration size $(length(conf)) and the graph size $(nv(graph)) do not match")
-        return -1.0
+        throw(DimensionMismatch("The configuration size $(length(conf)) and the graph size $(nv(graph)) do not match"))
     end # side note: turned out to be useful
 
     corr ::Float64 = 0.0
@@ -403,8 +406,7 @@ end
 function relaxed_cut_binary_v2(graph::SimpleGraph, state::Hybrid) ::Float64
     conf = state[1]
     if nv(graph) != length(conf)
-        println("ERROR: The configuration size $(length(conf)) and the graph size $(nv(graph)) do not match")
-        return -1.0
+        throw(DimensionMismatch("The configuration size $(length(conf)) and the graph size $(nv(graph)) do not match"))
     end # side note: turned out to be useful
 
     cv = cut_binary(graph, state[1])
@@ -416,8 +418,7 @@ function relaxed_cut_weighted_v2(graph::SimpleWeightedGraph,
                                  state::Hybrid) ::Float64
     conf = state[1]
     if nv(graph) != length(conf)
-        println("ERROR: The configuration size $(length(conf)) and the graph size $(nv(graph)) do not match")
-        return -1.0
+        throw(DimensionMismatch("The configuration size $(length(conf)) and the graph size $(nv(graph)) do not match"))
     end # side note: turned out to be useful
 
     cv = cut_weighted(graph, state[1])
