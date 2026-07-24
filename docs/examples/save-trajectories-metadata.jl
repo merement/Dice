@@ -15,8 +15,11 @@ header = [
     Dice.node_indexing(1),
     Dice.node(1, "CTRL_1"),
     Dice.node(3, "pass_a"),
+    Dice.record(:node, index = 3, name = "pass_a"),
     Dice.record(:solver; name = "my-relaxer", tolerance = 1e-8),
     Dice.metadata((git_commit = "abc123", seed = 42)),
 ]
 
 Dice.save_trajectories(stdout, traj, time, header)
+# trajectories are automatically numerated
+# Dice.save_trajectories(stdout, traj, header)
