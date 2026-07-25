@@ -25,9 +25,14 @@ delta_t = total_time/num_steps
 model = Dice.Model(graph, Dice.model_2_hybrid_coupling, delta_t)
 
 num_vertices = Graphs.nv(model.graph)
-state = Dice.get_random_hybrid(num_vertices, 1.2)
+# A specific initial state
+state = (Int8[-1, 1, 1, -1, -1, 1, 1], [0.117, 0.557, -0.164, 0.122, 0.471, -0.323, 0.224])
+# Alternatively, one can generate a random initial state
+# state = Dice.get_random_hybrid(num_vertices, 1.2)
 
-@show state[1]
+println("Initial state")
+@show state
 state = Dice.propagate(model, num_steps, state)
-spin_state = state[1]
-print("Final Max-Cut state: $spin_state")
+println("\nFinal binary component of the R-spins: $(state[1])") # should be Int8[1, 1, -1, 1, -1, 1, -1]
+cut = Dice.cut(model, state)
+println("Final Cut value: $cut") # should be 6

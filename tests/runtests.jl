@@ -47,6 +47,22 @@ using Test
         wmodel = Model(wg, Dice.model_2_hybrid_coupling, 0.05)
         @test wmodel.graph === wg
         @test wmodel.scale == 0.05
+
+        # 3. Simple example of propagation to a max-cut state
+        g_simple = Graphs.Graph(7)
+        add_edge!(g_simple, 1, 2)
+        add_edge!(g_simple, 2, 3)
+        add_edge!(g_simple, 3, 4)
+        add_edge!(g_simple, 4, 5)
+        add_edge!(g_simple, 5, 6)
+        add_edge!(g_simple, 6, 7)
+        add_edge!(g_simple, 7, 1)
+
+        model_simple = Model(g_simple, Dice.model_2_hybrid_coupling, 4.4/100)
+        state_simple = (Int8[-1, 1, 1, -1, -1, 1, 1], [0.117, 0.557, -0.164, 0.122, 0.471, -0.323, 0.224])
+        state_simple_final = propagate(model_simple, 100, state_simple)
+        @test state_simple_final[1] == Int8[1, 1, -1, 1, -1, 1, -1]
+        @test cut(model_simple, state_simple_final) == 6
     end
 
     @testset "Rounding Methods" begin
