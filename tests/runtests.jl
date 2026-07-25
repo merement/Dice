@@ -29,6 +29,11 @@ using Test
         @test length(state[1]) == 4
         @test length(state[2]) == 4
 
+        state_tuple = get_random_hybrid(nv(g), (-0.5, 0.5))
+        @test length(state_tuple[1]) == 4
+        @test length(state_tuple[2]) == 4
+        @test all(x -> -0.5 <= x <= 0.5, state_tuple[2])
+
         # Run propagation
         final_state = propagate(model, 10, state)
         @test length(final_state[1]) == 4

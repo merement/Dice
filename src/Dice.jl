@@ -527,7 +527,7 @@ function get_random_hybrid(Nvert::Int,
     vsize = vmax - vmin
     offset = (vmax + vmin)/2
     return (get_random_configuration(Nvert, p),
-            get_random_cube(Nvert, size) .+ offset)
+            get_random_cube(Nvert, vsize) .+ offset)
 end
 
 """
@@ -1123,7 +1123,7 @@ end
 
 Advance the network set on `graph` governed by the dynamical kernel `mtd`
 in the initial state `start` for `tmax` steps each of duration `scale` with
-spins listed in `pinned` fixed.
+spins listed in `pinned` together with the presumed values fixed.
 
 NOTE: This is the primary API: the function preserves the values of pinned
 relaxed spins (both the binary and continuous components) as supplied in
