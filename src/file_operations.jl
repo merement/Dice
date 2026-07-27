@@ -367,6 +367,16 @@ function created(dt::DateTime)
     return record(:created; value)
 end
 
+"""
+    created()
+
+Create a standard "created" metadata record using the current UTC time.
+"""
+
+function created()
+    return created(Dates.now(Dates.UTC))
+end
+
 
 """
     title(text)
