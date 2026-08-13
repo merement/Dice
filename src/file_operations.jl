@@ -76,7 +76,7 @@ function load_mtx_graph(filename::AbstractString,
         idx = 1
 
         while !eof(mtxFile)
-            #            for line in eachline(mtxFile) .|> strip .|> lowercase
+            # for line in eachline(mtxFile) .|> strip .|> lowercase
             line = readline(mtxFile) .|> strip .|> lowercase
             linecount += 1
             if isempty(line) || line[1] == '%'
@@ -122,8 +122,8 @@ end
 """
     save_mtx_graph(Graph::SimpleGraph, filename::String)
 
-Writes the sparce adjacency matrix of `Graph` to file `filename` in the reduced
-`MatrixMarket` format.
+Write the sparce adjacency matrix of `Graph` to file `filename` in the
+reduced `MatrixMarket` format.
 
 The adjacency matrix is written in the reduced `MatrixMarket` format.
 The first line contains two numbers: `|V| |E|`
@@ -276,8 +276,9 @@ raw_header_line(s::AbstractString) = RawHeaderLine(String(s))
 
 Create a machine-readable metadata record with a `"type"` field.
 
-The result is written as a `#@` JSON object. This is the recommended constructor
-for both standard type-based metadata and user-defined extension records.
+The result is written as a `#@` JSON object. This is the recommended
+constructor for both standard type-based metadata and user-defined
+extension records.
 
 # Examples
 
@@ -334,7 +335,8 @@ format_record(; name = "relaxed-spins", version = 1) =
 Create a standard `"created"` metadata record.
 
 When given a string, `value` is written exactly as supplied. When given a
-`DateTime`, the value is formatted as an ISO-like UTC timestamp ending in `Z`.
+`DateTime`, the value is formatted as an ISO-like UTC timestamp ending in
+`Z`.
 
 # Examples
 
@@ -358,9 +360,8 @@ The timestamp is formatted as
 yyyy-mm-ddTHH:MM:SSZ
 ```
 
-This method does not perform timezone conversion; it assumes the supplied
-`DateTime` should be interpreted as UTC or as already suitable for writing with
-a trailing `Z`.
+This method assumes the supplied `DateTime` should be interpreted as UTC
+and appends a trailing `Z`.
 """
 function created(dt::DateTime)
     value = Dates.format(dt, dateformat"yyyy-mm-ddTHH:MM:SS") * "Z"
@@ -372,11 +373,9 @@ end
 
 Create a standard "created" metadata record using the current UTC time.
 """
-
 function created()
     return created(Dates.now(Dates.UTC))
 end
-
 
 """
     title(text)
@@ -868,9 +867,9 @@ end
 Write metadata records to `io` as newline-delimited JSON.
 
 This function is the stream-native counterpart of file header writing. It
-emits machine-readable metadata records directly as JSON objects, without
-the file format's `#@` prefix. If a human-readable note should be
-transmitted through the stream, represent it as metadata instead.
+emits machine-readable metadata records directly as JSON objects. If a
+human-readable note should be transmitted through the stream, represent
+it as metadata instead.
 
 `header` may be either a collection of header entries or a single header
 entry. Supported entries are the same as for file headers:
@@ -905,7 +904,8 @@ writes
 {"type":"solver","name":"my-relaxer","tolerance":1.0e-8}
 ```
 
-The same function may be used later in a stream to interject updated metadata:
+The same function may be used later in a stream to interject updated
+metadata:
 
 ```julia
 stream_header(io, record(:conditions; temperature = 0.25, field = 1.5))
@@ -1020,15 +1020,15 @@ Construct the JSON-serializable stream record for a relaxed-spin configuration.
 The emitted object has the form
 
 ```json
-{"type":"sample","time":0.0,"node_states":[[1,0.12],[-1,0.44]]}
+{"type":"sample","time":0.0,"r_spins":[{"state": [1,0.12]},{"state": [-1,0.44]}]}
 ```
 
-where `node_states[i] = [spin_i, X_i]`.
+where `r_spins[i] = [spin_i, X_i]`.
 
 The sample is validated before the record is constructed. Each spin must be
 `+1` or `-1`, and the spin and floating-point vectors must have equal length.
 
-The optional `sample_index` is used only for informative error messages.
+Currently, the optional `sample_index` is used only for informative error messages.
 """
 function sample_record(
     hybrid::Hybrid,
@@ -1040,12 +1040,12 @@ function sample_record(
     label = sample_index === nothing ? "streamed sample" : sample_index
     validate_trajectory_sample(spins, xs, label)
 
-    node_states = [(Int(s), x) for (s, x) in zip(spins, xs)]
+    r_spins = [(state = (Int(s), x),) for (s, x) in zip(spins, xs)]
 
     return (
         type = "sample",
         time = time,
-        node_states = node_states,
+        r_spins = r_spins,
     )
 end
 
@@ -1055,16 +1055,10 @@ end
 
 Write one relaxed-spin sample to `io` as a newline-delimited JSON object.
 
-The sample is written as a single NDJSON message:
-
-```json
-{"type":"sample","time":0.0,"node_states":[[1,0.12],[-1,0.44]]}
-```
-
 # Example
 
 ```julia
-hybrid = (Int8[1, -1, 1], Float64[0.12, 0.44, 0.91])
+hybrid = (Int8[1, -1], Float64[0.12, 0.44])
 
 stream_sample(stdout, hybrid, 0.0)
 ```
@@ -1072,7 +1066,7 @@ stream_sample(stdout, hybrid, 0.0)
 writes
 
 ```text
-{"type":"sample","time":0.0,"node_states":[[1,0.12],[-1,0.44],[1,0.91]]}
+{"type":"sample","time":0.0,"r_spins":[{"state": [1,0.12]},{"state": [-1,0.44]}]}
 ```
 """
 function stream_sample(io::IO, hybrid::Hybrid, time::Real)
@@ -1106,8 +1100,8 @@ end
 """
     stream_trajectories(io::IO, traj::AbstractVector{<:Hybrid}, time::AbstractVector{<:Real}, header=[])
 
-Write metadata and relaxed-spin trajectory samples to `io` as newline-delimited
-JSON.
+Write metadata and relaxed-spin trajectory samples to `io` as
+newline-delimited JSON.
 
 First, all JSON records from `header` are written using
 [`stream_header`](@ref). Ordinary comments are discarded. Each
@@ -1116,7 +1110,7 @@ configuration in the trajectory is written as a `"sample"` message.
 Each sample message has the form
 
 ```json
-{"type":"sample","time":0.0,"node_states":[[1,0.12],[-1,0.44]]}
+{"type":"sample","time":0.0,"r_spins":[{"state": [1,0.12]},{"state": [-1,0.44]}]}
 ```
 
 The `traj` and `time` vectors must have the same length. The number of nodes
@@ -1126,8 +1120,8 @@ must remain constant across all samples. Each spin must be `+1` or `-1`.
 
 ```julia
 traj = Hybrid[
-    (Int8[1, -1, 1], Float64[0.12, 0.44, 0.91]),
-    (Int8[1, -1, 1], Float64[0.15, 0.43, 0.90]),
+    (Int8[1, -1], Float64[0.12, 0.44]),
+    (Int8[1, -1], Float64[0.15, 0.43]),
 ]
 
 time = [0.0, 0.1]
@@ -1150,8 +1144,8 @@ writes
 {"type":"node_indexing","base":1}
 {"type":"node","index":1,"name":"CTRL_1"}
 {"type":"node","index":3,"name":"pass_a"}
-{"type":"sample","time":0.0,"node_states":[[1,0.12],[-1,0.44],[1,0.91]]}
-{"type":"sample","time":0.1,"node_states":[[1,0.15],[-1,0.43],[1,0.9]]}
+{"type":"sample","time":0.0,"r_spins":[{"state": [1,0.12]},{"state": [-1,0.44]}]}
+{"type":"sample","time":0.1,"r_spins":[{"state": [1,0.15]},{"state": [-1,0.43]}]}
 ```
 
 For live simulations, metadata can also be interjected manually between samples:
@@ -1266,15 +1260,13 @@ function stream_trajectories(
     end
 end
 
-# One small usage pattern worth emphasizing:
+# One small usage pattern worth emphasizing
 
 # stream_header(io, header)
-
 # for step in 1:nsteps
 #     hybrid, t = next_sample!(simulation)
-
 #     stream_sample(io, hybrid, t)
-
+#
 #     if conditions_changed
 #         stream_header(io, record(:conditions; coupling = T, field = B))
 #     end

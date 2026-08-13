@@ -11,6 +11,7 @@ header = [
     Dice.comment("Simulation metadata"),
     Dice.format_record(),
     Dice.created("2026-01-26T18:44:00Z"),
+    # or Dice.created() for inserting the current time
     Dice.title("Trajectory for test run 42"),
     Dice.node_indexing(1),
     Dice.node(1, "CTRL_1"),

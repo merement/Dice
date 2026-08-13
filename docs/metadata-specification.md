@@ -132,7 +132,7 @@ In streaming contexts, data samples and control mechanisms are transmitted as pu
 Replaces raw text rows with structured JSON arrays.
 
 ```json
-{"type": "sample", "time": 0.0, "node_states": [[1, 0.12], [-1, 0.44], [1, 0.91]]}
+{"type": "sample", "time": 0.0, "r_spins": [{"state": [1, 0.12]}, {"state": [-1, 0.44]}, {"state": [1, 0.91]}]}
 
 ```
 
