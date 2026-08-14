@@ -1173,11 +1173,11 @@ function propagate_pinned(graph::ModelGraph,
                           mtd::Function,
                           start::Hybrid,
                           pinned::Vector{Tuple{Int64,RSpin}})::Hybrid
-    _pinned = (x -> x[1]).(pinned)
-    for ind in _pinned
-        start[1][ind] = pinned[ind][2][1]
-        start[2][ind] = pinned[ind][2][2]
+    for pin in pinned
+        start[1][pin[1]] = pin[2][1]
+        start[2][pin[1]] = pin[2][2]
     end
+    _pinned = (x -> x[1]).(pinned)
     return propagate_pinned(graph, tmax, scale, mtd, start, _pinned)
 end
 
@@ -1205,13 +1205,11 @@ function propagate_pinned(graph::ModelGraph,
                           mtd::Function,
                           start::Hybrid,
                           pinned::Vector{Tuple{Int64,Int8}})::Hybrid
-    _pinned = (x -> x[1]).(pinned)
-    for ind in _pinned
-        start[1][ind] = pinned[ind][1]
-        start[2][ind] = 0.0
-        # S[pin[1]] = pin[2]
-        # X[pin[1]] = 0.0
+    for pin in pinned
+        start[1][pin[1]] = pin[2]
+        start[2][pin[1]] = 0.0
     end
+    _pinned = (x -> x[1]).(pinned)
     return propagate_pinned(graph, tmax, scale, mtd, start, _pinned)
 end
 
