@@ -1,0 +1,11 @@
+{"type":"format","name":"relaxed-spins","version":1}
+{"type":"created","value":"2026-01-26T18:44:00Z"}
+{"type":"title","value":"Example trajectory"}
+{"type":"node_indexing","base":1}
+{"type":"node","index":1,"name":"CTRL_1"}
+{"type":"node","index":3,"name":"pass_a"}
+{"type":"node","index":3,"name":"pass_a"}
+{"type":"solver","name":"my-relaxer","tolerance":1.0e-8}
+{"git_commit":"abc123","seed":42}
+{"type":"sample","time":0.0,"r_spins":[{"state":[1,0.12]},{"state":[-1,0.44]},{"state":[1,0.91]}]}
+{"type":"sample","time":0.1,"r_spins":[{"state":[1,0.15]},{"state":[-1,0.43]},{"state":[1,0.9]}]}

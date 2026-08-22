@@ -129,7 +129,7 @@ In streaming contexts, data samples and control mechanisms are transmitted as pu
 
 #### Stream Samples
 
-Replaces raw text rows with structured JSON arrays.
+The data, represented by text rows in the raw format, is replaced with structured JSON arrays.
 
 ```json
 {"type": "sample", "time": 0.0, "r_spins": [{"state": [1, 0.12]}, {"state": [-1, 0.44]}, {"state": [1, 0.91]}]}
@@ -174,6 +174,6 @@ Enables a consumer or controller to send commands back to the data source, using
 {"type": "format", "name": "relaxed-spins", "version": 1}
 {"type": "node_indexing", "base": 1}
 {"type": "node", "index": 1, "name": "CTRL_1"}
-{"type": "sample", "time": 0.0, "node_states": [[1, 0.12], [-1, 0.44]]}
+{"type": "sample", "time": 0.0, "r_spins": [{"state": [1, 0.12]}, {"state": [-1, 0.44]}, {"state": [1, 0.91]}]}
 
 ```
